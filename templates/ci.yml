@@ -9,6 +9,6 @@ permissions:
 
 jobs:
   quality:
-    uses: wizyig/mokuren-ci/.github/workflows/reusable-quality.yml@v1
+    uses: wizyig/mokuren-ci/.github/workflows/reusable-quality.yml@v1.0.0
     with:
       profile: dice

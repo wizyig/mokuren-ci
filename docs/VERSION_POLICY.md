@@ -1,12 +1,10 @@
 # Version policy
 
-Consumers pin `@v1`.
+Consumers pin immutable tags such as `@v1.0.0`.
 
-- v1.x compatible
-- v2.x breaking
+- PATCH: fixes
+- MINOR: compatible additions
+- MAJOR: breaking
 
-Critical (leak / bad mask / vuln): same day.
-Quality tooling: monthly.
-Features: quarterly.
-
-Floating major tag move and CAS rollback are not automated in this bootstrap.
+Floating `v1` is not published in Phase 1.
+Published release tags are never force-moved.

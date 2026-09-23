@@ -13,7 +13,7 @@ on:
         default: "22"
         type: string
       fail-on-ruleset:
-        description: Require ruleset verification when the action exists
+        description: Reserved; unused in v1.0.0
         required: false
         default: false
         type: boolean
@@ -89,7 +89,7 @@ jobs:
           fi
 
       - name: Secret scan
-        uses: wizyig/mokuren-ci/.github/actions/secret-scan@main
+        uses: wizyig/mokuren-ci/.github/actions/secret-scan@v1.0.0
 
       - name: Schema
         run: ${{ needs.validate-inputs.outputs.schema-command }}
