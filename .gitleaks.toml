@@ -1,0 +1,12 @@
+title = "mokuren-ci"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "repo metadata"
+paths = [
+  '''^\.gitleaks\.toml$''',
+  '''^LICENSE$''',
+  '''^NOTICE$''',
+]

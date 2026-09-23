@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: wizyig/mokuren-ci/.github/workflows/reusable-quality.yml@v1
+    with:
+      profile: dice
