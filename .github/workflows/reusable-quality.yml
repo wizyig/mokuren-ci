@@ -1,0 +1,104 @@
+name: quality-gate
+
+on:
+  workflow_call:
+    inputs:
+      profile:
+        description: Consumer profile allowlist key
+        required: true
+        type: string
+      node-version:
+        description: Node.js version
+        required: false
+        default: "22"
+        type: string
+      fail-on-ruleset:
+        description: Require ruleset verification when the action exists
+        required: false
+        default: false
+        type: boolean
+    secrets: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      schema-command: ${{ steps.map.outputs.schema-command }}
+      vector-command: ${{ steps.map.outputs.vector-command }}
+    steps:
+      - name: Map profile
+        id: map
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.node-version }}" in
+            20|22) ;;
+            *)
+              echo "unsupported node version"
+              exit 1
+              ;;
+          esac
+          case "${{ inputs.profile }}" in
+            dice)
+              echo "schema-command=npm run validate:schema" >> "$GITHUB_OUTPUT"
+              echo "vector-command=npm run test:vectors" >> "$GITHUB_OUTPUT"
+              ;;
+            baguamap)
+              echo "schema-command=npm run validate:bagua" >> "$GITHUB_OUTPUT"
+              echo "vector-command=npm run test:bagua" >> "$GITHUB_OUTPUT"
+              ;;
+            ofanimring)
+              echo "schema-command=npm run validate:ring" >> "$GITHUB_OUTPUT"
+              echo "vector-command=npm run test:ring" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "unsupported profile"
+              exit 1
+              ;;
+          esac
+
+  quality:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          else
+            echo "no package.json; skip npm"
+          fi
+
+      - name: Secret scan
+        uses: wizyig/mokuren-ci/.github/actions/secret-scan@main
+
+      - name: Schema
+        run: ${{ needs.validate-inputs.outputs.schema-command }}
+
+      - name: Vectors
+        run: ${{ needs.validate-inputs.outputs.vector-command }}
+
+      - name: Success summary
+        if: success()
+        run: |
+          echo "# Quality Gate Passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "profile=${{ inputs.profile }}" >> "$GITHUB_STEP_SUMMARY"
